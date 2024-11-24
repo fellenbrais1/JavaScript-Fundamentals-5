@@ -121,17 +121,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // If the guess is not correct the ternary operator is used to change the displayed message oto the user regarding too high or too low
         } else if (guess !== correctNumber) {
-          document.querySelector('.message').textContent =
+          displayMessage(
             guess > correctNumber
               ? '📈 You guessed too high!'
-              : '📉 You guessed too low!';
+              : '📉 You guessed too low!'
+          );
           gameScore--;
           displayScore(gameScore);
           return;
         }
       };
 
-      // Function call allows the gameLogic to keep running
+      // Function call allows the game logic to keep running
       checkGuess();
     };
 
@@ -158,12 +159,12 @@ document.querySelector('.again').addEventListener('click', () => {
   window.location.reload();
 });
 
-// Function to enable shorthand calls to change the content of the '.message' selector
+// Function to enable shorthand calls to change the content of the '.message' selector - hoisted
 function displayMessage(message) {
   document.querySelector('.message').textContent = message;
 }
 
-// Function to enable shorthand calls to change the content of the '.label-score' selector
+// Function to enable shorthand calls to change the content of the '.label-score' selector - hoisted
 function displayScore(gameScore) {
   let message = `💯 Score: ${gameScore}`;
   document.querySelector('.label-score').textContent = message;
