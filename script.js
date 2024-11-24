@@ -33,17 +33,17 @@
 'use strict';
 
 // Configurable consts
-const low = 1;
-const high = 20;
+const LOW = 1;
+const HIGH = 100;
 
 // Changes the text content in the '.between' element at the top of the page based on the low and high values specified above
-document.querySelector('.between').textContent = `(Between ${low} and ${high})`;
+document.querySelector('.between').textContent = `(Between ${LOW} and ${HIGH})`;
 
 // Allows the gameLogic and code to be run only after all of the visual elements on the page have been successfully loaded
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     const setNumber = function () {
-      const correctNumber = Math.trunc(Math.random() * high + 1);
+      const correctNumber = Math.trunc(Math.random() * HIGH + 1);
       console.clear;
       console.log(correctNumber);
       return correctNumber;
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isNaN(guess)) {
           document.querySelector(
             '.message'
-          ).textContent = `Please enter a number between ${low} and ${high}.`;
+          ).textContent = `Please enter a number between ${LOW} and ${HIGH}.`;
           return;
         }
 
@@ -90,15 +90,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (guess % 1 !== 0) {
           document.querySelector(
             '.message'
-          ).textContent = `Please enter a number between ${low} and ${high}.`;
+          ).textContent = `Please enter a number between ${LOW} and ${HIGH}.`;
           return;
         }
 
         // Allows processing of numbers lower than the specified low or higher than the specified high
-        if (guess < low || guess > high) {
+        if (guess < LOW || guess > HIGH) {
           document.querySelector(
             '.message'
-          ).textContent = `Please enter a number between ${low} and ${high}.`;
+          ).textContent = `Please enter a number between ${LOW} and ${HIGH}.`;
           return;
         }
 
