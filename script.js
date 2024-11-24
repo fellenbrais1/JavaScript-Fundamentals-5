@@ -22,13 +22,19 @@
 
 // We can use querySelector with a selector specified within the parentheses. This should print the associated HTML element in the console. If we want only to get the text content of an element we can add '.textContent' after the parentheses to only log that to the console.
 
-// To add eventlisteners we first specify the element to apply this to by using 'querySelector(selector).addEventListener()' In the parentheses for the addEventListener we first specify the event in quotes, we can see a list come up on an IDE of the options, and then we can run a function etc. after that, so something like: 'querySelector('.check').addEventListener('click', () => {})' We specify what happens between the curly braces as if it was a function. If we define the function within the parentheses as an expression it will not be stored anywhere but will be called when the eventListener goes off.
+// To add eventlisteners we first specify the element to apply this to by using 'querySelector(selector).addEventListener()' In the parentheses for the addEventListener we first specify the event in quotes, we can see a list come up on an IDE of the options, and then we can run a function etc. after that, so something like: 'querySelector('.check').addEventListener('click', () => {})' We specify what happens between the curly braces as if it was a function. Or, if we define the function within the parentheses as an expression it will not be stored anywhere but will be called when the eventListener goes off. In these cases, these are anonymous handler functions as they do not have a name.
 
-// We can change the style of elements by using .style after we have specified querySelector and addEventListener if it is needed. So for example we could do something like 'querySelector('body').style.backgroundColor = '#60b347';'
+// We can change the style of elements by using .style after we have specified querySelector and addEventListener if it is needed. So for example we could do something like 'querySelector('body').style.backgroundColor = '#60b347';' Be careful with the names of properties, they are written with dashes in CSS, like background-color, but in JavaScript, they have to be written in lowerCamelCase. Values have to be included as a string like '30rem'.
 
 // To store variables in memory between page reloads there are a few different methods. In this project, I have stored them in session memory, so refreshing the page will keep the values, but closing down the browser session completely will wipe the data. There are also methods for using cookies to save the data to the users machine, or to save it to the website for use in future sessions.
 
 // To save and load this session data I have used the 'sessionStorage.setItem('itemName', variable)' and 'sessionStorage.getItem('itemName')' methods, these can also be attached to querySelectors or addEventListeners.
+
+// To reset the game I have opted to reload the whole page with the code line 'window.location.reload();' This resets the message and number values and sets a new secret number value due to the code outside of the functions running automatically once the DOM has been loaded. The highscore is saved to the session so it can persist between rounds in the session. You could write a function that resets all of the values to their originals and generates a new secret number as well, if you did not want to rely on a reload for whatever reason.
+
+// I have deviated a bit from what was suggested in the course, but I think that the code I have used is more efficient that what was suggested in the course for simplicity's sake. There are many other ways to do this so as long as it works and is reasonably efficient that is fine.
+
+// We can refactor the code once we have gotten it working in order to find and remove redundancies and other unneeded code. We can identify duplication and remove these or code them more efficiently. We can also use ternary operators etc. in order to make the code more efficient in general. Code that has to be called over and over should be refactored into functions that can be called when they are needed.
 
 'use strict';
 
@@ -39,21 +45,17 @@ const HIGH = 100;
 // Changes the text content in the '.between' element at the top of the page based on the low and high values specified above
 document.querySelector('.between').textContent = `(Between ${LOW} and ${HIGH})`;
 
-// Allows the gameLogic and code to be run only after all of the visual elements on the page have been successfully loaded
+// Allows the gameLogic and code to be run only after all of the elements on the page have been successfully loaded
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     const setNumber = function () {
       const correctNumber = Math.trunc(Math.random() * HIGH + 1);
-      console.clear;
-      console.log(correctNumber);
       return correctNumber;
     };
 
     // Sets the content of the score field on the page
     let gameScore = 20;
-    document.querySelector(
-      '.label-score'
-    ).textContent = `💯 Score: ${gameScore}`;
+    displayScore(gameScore);
 
     // Loads any stored highScore value in the web session
     let highScore = sessionStorage.getItem('highScore');
@@ -78,27 +80,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const checkGuess = () => {
         guess = Number(document.querySelector('.guess').value);
 
-        // To not allow guesses that contain text values etc.
-        if (isNaN(guess)) {
-          document.querySelector(
-            '.message'
-          ).textContent = `Please enter a number between ${LOW} and ${HIGH}.`;
+        // To allow a game over state, the gameLogic will become unresponsive until the 'Again!' button is pressed or the page is reloaded
+        if (gameScore < 2) {
+          // Changes the style of the page's body
+          gameScore--;
+          displayScore(gameScore);
+          document.querySelector('body').style.backgroundColor = '#db1212';
+
+          displayMessage(`You are out of guesses! GAME OVER!`);
           return;
         }
 
-        // To not allow guesses containing a decimal point
-        if (guess % 1 !== 0) {
-          document.querySelector(
-            '.message'
-          ).textContent = `Please enter a number between ${LOW} and ${HIGH}.`;
-          return;
-        }
-
-        // Allows processing of numbers lower than the specified low or higher than the specified high
-        if (guess < LOW || guess > HIGH) {
-          document.querySelector(
-            '.message'
-          ).textContent = `Please enter a number between ${LOW} and ${HIGH}.`;
+        // To not allow guesses that contain text values etc, guesses containing a decimal point, or numbers lower than the specified low or higher than the specified high.
+        if (isNaN(guess) || guess % 1 !== 0 || guess < LOW || guess > HIGH) {
+          displayMessage(
+            `Please enter a whole number between ${LOW} and ${HIGH}.`
+          );
           return;
         }
 
@@ -108,11 +105,10 @@ document.addEventListener('DOMContentLoaded', () => {
           document.querySelector('body').style.backgroundColor = '#60b347';
 
           // Sets the content on the rest of the page
-          document.querySelector('.message').textContent = 'Correct Number!';
+          displayMessage('Correct Number!');
+          document.querySelector('.number').style.width = '30rem';
           document.querySelector('.number').textContent = correctNumber;
-          document.querySelector(
-            '.label-score'
-          ).textContent = `🎉 Score: ${gameScore}`;
+          displayScore(gameScore);
 
           // Calculates whether the new high score is better than the old one and saves the highest high score to the web session
           let finalScore = gameScore;
@@ -123,23 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
           document.querySelector('.label-highscore').textContent =
             highScoreString;
 
-          // If the guess is too low
-        } else if (guess > correctNumber) {
+          // If the guess is not correct the ternary operator is used to change the displayed message oto the user regarding too high or too low
+        } else if (guess !== correctNumber) {
           document.querySelector('.message').textContent =
-            '📈 You guessed too high!';
+            guess > correctNumber
+              ? '📈 You guessed too high!'
+              : '📉 You guessed too low!';
           gameScore--;
-          document.querySelector(
-            '.label-score'
-          ).textContent = `💯 Score: ${gameScore}`;
-          return;
-        } else {
-          // If the guess is too high
-          document.querySelector('.message').textContent =
-            '📉 You guessed too low!';
-          gameScore--;
-          document.querySelector(
-            '.label-score'
-          ).textContent = `💯 Score: ${gameScore}`;
+          displayScore(gameScore);
           return;
         }
       };
@@ -148,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
       checkGuess();
     };
 
+    // Calculates the secret number by running the setNumber function, as this is within setTimeOut, this only happens once everything in the DOM has been loaded
     const correctNumber = setNumber();
 
     // Runs the gameLogic function whenever the user clicks on the check button
@@ -162,7 +150,6 @@ const calcHighestScore = function (highScore, newHighScore) {
   if (newHighScore > highScore) {
     highScore = newHighScore;
   }
-
   return highScore;
 };
 
@@ -170,3 +157,14 @@ const calcHighestScore = function (highScore, newHighScore) {
 document.querySelector('.again').addEventListener('click', () => {
   window.location.reload();
 });
+
+// Function to enable shorthand calls to change the content of the '.message' selector
+function displayMessage(message) {
+  document.querySelector('.message').textContent = message;
+}
+
+// Function to enable shorthand calls to change the content of the '.label-score' selector
+function displayScore(gameScore) {
+  let message = `💯 Score: ${gameScore}`;
+  document.querySelector('.label-score').textContent = message;
+}
